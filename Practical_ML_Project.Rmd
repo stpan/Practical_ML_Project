@@ -1,0 +1,46 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "STP"
+date: "Saturday, June 20, 2015"
+output: html_document
+---
+
+Data Prep:
+
+First, The derived features, which summarized the data, are removed.  The data are then split into a training and a cross-validation set, using a 60/40 ratio.
+
+```{r}
+library(dplyr)
+library(caret)
+
+data<-read.csv("./pml-training.csv",na.strings=c("NA","","#DIV/0!"))
+data<-select(data,c(roll_belt:yaw_belt,gyros_belt_x:magnet_belt_z,
+             roll_arm:yaw_arm,gyros_arm_x:magnet_arm_z,
+             roll_dumbbell:yaw_dumbbell,gyros_dumbbell_x:magnet_dumbbell_z,
+             roll_forearm:yaw_forearm,gyros_forearm_x:magnet_forearm_z,classe))
+
+inTrain<-createDataPartition(y=data$classe,p=0.6,list=FALSE)
+dataTrain<-data[inTrain,]
+dataCV<-data[-inTrain,]
+```
+
+
+Exploratory Data Analysis:
+```{r}
+head(dataTrain)
+str(dataTrain)
+```
+
+Model Fitting:
+The training data are fitted to a classification model using random forest, all variables are used.  This is a first try, if validation test results are not satisfactory, other models or more refined selection of variables may be used.
+```{r}
+modFitRF<-train(classe~.,method="rf",data=dataTrain)
+```
+
+Cross Valiation:
+```{r}
+pred<-predict(modFitRF,dataCV)
+confusionMatrix(pred,dataCV$classe)
+```
+
+Based on cross validation results, the model appears to have high predictive power.
